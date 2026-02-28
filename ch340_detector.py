@@ -16,5 +16,5 @@ def detect_ch340_port():
         description = com_port.description
 
         if "CH340" in description.upper():
-                print(f"✓ 发现CH340设备")
+                print(f"{" " * 14}✓ 发现CH340设备")
                 return port

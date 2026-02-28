@@ -81,7 +81,7 @@ def init_SFace(model_path):
 # 检测结果队列（用于主线程和舵机控制线程之间的通信）
 servo_queue = queue.Queue(maxsize=1)
 
-def capture_video(camera_id = 0):
+def capture_video(target_path, camera_id = 0):
 
     # YuNet模型初始化
     YN_model_path = './model/face_detection_yunet_2023mar.onnx'
@@ -103,7 +103,7 @@ def capture_video(camera_id = 0):
         return
     
     # 检测目标人脸
-    target = cv2.imread('./images/target3.jpg')
+    target = cv2.imread(target_path)
     detector.setInputSize([target.shape[1], target.shape[0]])
     target_face = detector.infer(target)
     assert target_face.shape[0] > 0, 'Cannot find a face in target'
@@ -225,7 +225,7 @@ def main():
     # //TODO 舵机串口号
     print("=" * 50)
     SERVO_PORT = detect_ch340_port()
-    print(f"端口号:{SERVO_PORT}")
+    print(f"{" " * 16}端口号:{SERVO_PORT}")
     print("=" * 50)
     
     servo_manager = Arm5DoFUServo(device=SERVO_PORT, is_init_pose= False)
@@ -237,7 +237,7 @@ def main():
     servo_thread.start()
     print("舵机控制线程已启动")
 
-    capture_video(camera_id=0)
+    capture_video(target_path='./images/target3.jpg',camera_id=0)
 
     # 等待舵机线程结束
     servo_thread.join(timeout=1)
