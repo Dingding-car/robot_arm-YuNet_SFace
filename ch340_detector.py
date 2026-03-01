@@ -3,18 +3,23 @@
 """
 CH340 Serial Port Auto-Detection Script
 自动搜索CH340串口设备并输出对应的COM口号
+兼容Linux
 """
 
-import serial
 import serial.tools.list_ports
 
 
 def detect_ch340_port():
     port_list = list(serial.tools.list_ports.comports())
-    for com_port in port_list:
-        port = com_port.device
-        description = com_port.description
+    for port_info in port_list:
+        port = port_info.device
+        description = port_info.description
+        hwid = port_info.hwid
 
-        if "CH340" in description.upper():
+        if "CH340" in description.upper() or "1a86:7523" in hwid.lower():
                 print(f"{" " * 14}✓ 发现CH340设备")
                 return port
+        
+if __name__ == "__main__":
+     port = detect_ch340_port()
+     print(f"{port}")
