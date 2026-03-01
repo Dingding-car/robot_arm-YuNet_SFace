@@ -10,7 +10,7 @@ __pycache__/
 /images
 
 # 忽略测试文件
-test.py
+test*.py
 
 # 忽略VSCode配置文件
 .vscode/
