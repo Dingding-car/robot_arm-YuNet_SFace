@@ -15,7 +15,6 @@ from ch340_detector import detect_ch340_port
 from camera_detector import detect_camera
 
 
-
 # 人脸检测可视化函数
 def visualize(image, results, matches=None, scores=None, box_color=(0, 255, 0), text_color=(255, 0, 255), fps=None):
     output = image.copy()
@@ -89,9 +88,8 @@ def capture_video(target_path, servo_queue, camera_id = 0):
     SF_model_path = './model/face_recognition_sface_2021dec.onnx'
     recognizer = init_SFace(SF_model_path)
 
-    # 打开摄像头
-    deviceId = camera_id # 摄像头设备ID,默认为0
-    cap = cv2.VideoCapture(deviceId)
+    # 摄像头设备ID,默认为0
+    cap = cv2.VideoCapture(camera_id)
 
     # 检查视频是否成功打开
     global stop_servo_thread
@@ -221,10 +219,8 @@ def servo_control(servo_manager, servo_queue, stop_servo_thread= False):
 # 主函数
 def main():
     # 自动检测串口
-    print("=" * 50)
     SERVO_PORT = detect_ch340_port()
-    # print(f"{" " * 16}端口号:{SERVO_PORT}")
-    print("=" * 50)
+    CAMERA_ID = detect_camera()
     
     servo_manager = Arm5DoFUServo(device=SERVO_PORT, is_init_pose= False)
     print("机械臂回正")
@@ -238,8 +234,7 @@ def main():
     servo_thread.start()
     print("舵机控制线程已启动")
 
-    camera_id = detect_camera()
-    capture_video(target_path='./images/target3.jpg', servo_queue = servo_queue, camera_id= camera_id)
+    capture_video(target_path='./images/target3.jpg', servo_queue = servo_queue, camera_id= CAMERA_ID)
 
     # 等待舵机线程结束
     servo_thread.join(timeout=1)

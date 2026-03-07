@@ -6,6 +6,7 @@ sys.path.append('./kinematic')
 
 from kinematic.arm5dof_uservo import Arm5DoFUServo
 from ch340_detector import detect_ch340_port
+from camera_detector import detect_camera
 
 # 全局变量存储点击的点
 global clicked_points
@@ -99,7 +100,7 @@ def mouse_callback(event, x, y, flags, param):
         cv2.putText(image, str(len(clicked_points)), (x+10, y), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
-def get_9points_from_camera():
+def get_9points_from_camera(camera_id = 0):
     """
     从摄像头获取画面，通过鼠标双击获取9个点的像素坐标
     :return: 9个点的像素坐标 np.array (9,2) float32
@@ -108,14 +109,14 @@ def get_9points_from_camera():
     clicked_points = []  # 重置点列表
     
     # 打开摄像头（0为默认摄像头）
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(camera_id)
     if not cap.isOpened():
         raise Exception("无法打开摄像头，请检查设备连接")
     
     # 创建窗口并设置鼠标回调
     cv2.namedWindow("Workspace Calibration - Double click to select 9 points", cv2.WINDOW_NORMAL)
     
-    print("请在画面中双击左键选择9个点，按ESC键退出，选满9个点自动结束")
+    print("请在画面中双击左键选择9个点，按Q键退出，选满9个点自动结束")
     
     while True:
         # 读取摄像头画面
@@ -146,7 +147,7 @@ def get_9points_from_camera():
         
         # 退出条件：ESC键 或 选满9个点
         key = cv2.waitKey(1) & 0xFF
-        if key == 27:  # ESC键
+        if key == ord('q'):  # ESC键
             print("用户手动退出")
             cap.release()
             cv2.destroyAllWindows()
@@ -193,26 +194,26 @@ def save_calibration_points_to_yaml(ws_points, img_points, yaml_path):
     
     print(f"标定点数据已保存到YAML文件: {yaml_path}")
 
-def main():
+def handeye_calib():
     # 1. 配置参数
     camera_params_file = "./config/camera_calib_params.npz"  # 相机内参文件路径
     board_width = 105.0  # 工作台宽度（单位：mm）
     board_height = 79.0  # 工作台高度（单位：mm）
     yaml_save_path = "./config/calibration_points.yaml" # YAML文件保存路径
     
-    # 自动检测串口
-    print("=" * 50)
+    # 自动检测串口和相机
     SERVO_PORT = detect_ch340_port()
-    print("=" * 50)
-    
+    CAMERA_ID = detect_camera()
+
     servo_manager = Arm5DoFUServo(device=SERVO_PORT, is_init_pose= False)
-    print("机械臂回正")
+    print("机械臂运动到拍照点")
     servo_manager.set_tool_pose(pose_name='capture_image', T=2.0)
 
     # 2. 获取9个点的像素坐标
     print("开始从摄像头采集9个点...")
-    img_9points = get_9points_from_camera()
+    img_9points = get_9points_from_camera(CAMERA_ID)
     if img_9points is None or len(img_9points) != 9:
+        servo_manager.set_damping(1000)
         print("点采集失败或未完成")
         return
     
@@ -241,6 +242,5 @@ def main():
         print(f"路径 {e} 未找到，请检查路径")
     except Exception as e:
         print(f"标定过程出错: {e}")
-
-if __name__ == "__main__":
-    main()
+    
+    servo_manager.set_damping(1000)
