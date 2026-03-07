@@ -222,7 +222,7 @@ def main():
     # 自动检测串口
     print("=" * 50)
     SERVO_PORT = detect_ch340_port()
-    print(f"{" " * 16}端口号:{SERVO_PORT}")
+    # print(f"{" " * 16}端口号:{SERVO_PORT}")
     print("=" * 50)
     
     servo_manager = Arm5DoFUServo(device=SERVO_PORT, is_init_pose= False)

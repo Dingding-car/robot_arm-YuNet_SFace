@@ -1,0 +1,73 @@
+calibration_points:
+- point_id: 1
+  workspace_coordinates:
+    x: 39.5
+    y: 52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 73.0
+    v: 65.0
+- point_id: 2
+  workspace_coordinates:
+    x: 39.5
+    y: 0.0
+    z: 0.0
+  pixel_coordinates:
+    u: 320.0
+    v: 60.0
+- point_id: 3
+  workspace_coordinates:
+    x: 39.5
+    y: -52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 570.0
+    v: 64.0
+- point_id: 4
+  workspace_coordinates:
+    x: 0.0
+    y: 52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 40.0
+    v: 232.0
+- point_id: 5
+  workspace_coordinates:
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  pixel_coordinates:
+    u: 313.0
+    v: 234.0
+- point_id: 6
+  workspace_coordinates:
+    x: 0.0
+    y: -52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 596.0
+    v: 234.0
+- point_id: 7
+  workspace_coordinates:
+    x: -39.5
+    y: 52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 14.0
+    v: 437.0
+- point_id: 8
+  workspace_coordinates:
+    x: -39.5
+    y: 0.0
+    z: 0.0
+  pixel_coordinates:
+    u: 307.0
+    v: 451.0
+- point_id: 9
+  workspace_coordinates:
+    x: -39.5
+    y: -52.5
+    z: 0.0
+  pixel_coordinates:
+    u: 614.0
+    v: 447.0

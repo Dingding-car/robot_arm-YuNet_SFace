@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import yaml
 import sys
 sys.path.append('./kinematic')
 
@@ -70,7 +71,7 @@ class Workspace_calibration:
             print("成功求解相机到工作台的变换矩阵")
             print("旋转向量:\n", rvec)
             print("平移向量:\n", tvec)
-            return rvec, tvec
+            return success, rvec, tvec, ws_9points
         else:
             print("PnP求解失败")
             return None, None
@@ -106,13 +107,13 @@ def get_9points_from_camera():
     global clicked_points
     clicked_points = []  # 重置点列表
     
-    # 打开摄像头（0为默认摄像头，若有多个可尝试1、2等）
+    # 打开摄像头（0为默认摄像头）
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise Exception("无法打开摄像头，请检查设备连接")
     
     # 创建窗口并设置鼠标回调
-    cv2.namedWindow("Camera Calibration - Double click to select 9 points", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("Workspace Calibration - Double click to select 9 points", cv2.WINDOW_NORMAL)
     
     print("请在画面中双击左键选择9个点，按ESC键退出，选满9个点自动结束")
     
@@ -134,14 +135,14 @@ def get_9points_from_camera():
         
         # 显示提示文字
         cv2.putText(display_frame, f"Selected points: {len(clicked_points)}/9", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
         # 设置鼠标回调（传入当前帧用于绘制）
-        cv2.setMouseCallback("Camera Calibration - Double click to select 9 points", 
+        cv2.setMouseCallback("Workspace Calibration - Double click to select 9 points", 
                             mouse_callback, display_frame)
         
         # 显示画面
-        cv2.imshow("Camera Calibration - Double click to select 9 points", display_frame)
+        cv2.imshow("Workspace Calibration - Double click to select 9 points", display_frame)
         
         # 退出条件：ESC键 或 选满9个点
         key = cv2.waitKey(1) & 0xFF
@@ -161,16 +162,47 @@ def get_9points_from_camera():
     # 转换为numpy数组并返回
     return np.array(clicked_points, dtype=np.float32)
 
+def save_calibration_points_to_yaml(ws_points, img_points, yaml_path):
+    """
+    将实际坐标（工作台坐标系）和像素坐标保存为YAML文件
+    :param ws_points: 9个点的实际三维坐标，np.array (9,3)
+    :param img_points: 9个点的像素坐标，np.array (9,2)
+    :param yaml_path: YAML文件保存路径
+    """
+    # 构造数据字典
+    calibration_data = {
+        "calibration_points": [
+            {
+                "point_id": i+1,
+                "workspace_coordinates": {  # 实际坐标（工作台坐标系）
+                    "x": float(ws_points[i][0]),
+                    "y": float(ws_points[i][1]),
+                    "z": float(ws_points[i][2])
+                },
+                "pixel_coordinates": {  # 像素坐标
+                    "u": float(img_points[i][0]),
+                    "v": float(img_points[i][1])
+                }
+            } for i in range(9)
+        ]
+    }
+    
+    # 写入YAML文件
+    with open(yaml_path, 'w', encoding='utf-8') as f:
+        yaml.dump(calibration_data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+    
+    print(f"标定点数据已保存到YAML文件: {yaml_path}")
+
 def main():
     # 1. 配置参数
-    camera_params_file = "./config/camera_calib_params.npz"  # 替换为你的相机内参文件路径
-    board_width = 105.0  # 工作台宽度（单位：mm，根据实际情况调整）
-    board_height = 79.0  # 工作台高度（单位：mm，根据实际情况调整）
+    camera_params_file = "./config/camera_calib_params.npz"  # 相机内参文件路径
+    board_width = 105.0  # 工作台宽度（单位：mm）
+    board_height = 79.0  # 工作台高度（单位：mm）
+    yaml_save_path = "./config/calibration_points.yaml" # YAML文件保存路径
     
     # 自动检测串口
     print("=" * 50)
     SERVO_PORT = detect_ch340_port()
-    print(f"{" " * 16}端口号:{SERVO_PORT}")
     print("=" * 50)
     
     servo_manager = Arm5DoFUServo(device=SERVO_PORT, is_init_pose= False)
@@ -191,18 +223,22 @@ def main():
     # 3. 初始化标定类并求解变换矩阵
     try:
         calib = Workspace_calibration(camera_params_file, board_width, board_height)
-        rvec, tvec = calib.solve_T_cam2ws(img_9points)
+        success, rvec, tvec, ws_9points = calib.solve_T_cam2ws(img_9points)
         
         # 如果需要，可以将旋转向量转换为旋转矩阵
-        if rvec is not None:
+        if success:
             # 构造相机坐标系到工作台坐标系的变换矩阵
             T_cam2ws = np.eye(4)
             T_cam2ws[:3, :3] = cv2.Rodrigues(rvec)[0]
             T_cam2ws[:3, 3] = tvec.reshape(-1)
             print("变换矩阵:\n", T_cam2ws)
+
+            # 保存变换矩阵和标定点的像素坐标和工作台坐标
             np.savetxt('./config/T_cam2ws.txt', T_cam2ws, fmt='%.3f', delimiter=',')
-    except FileNotFoundError:
-        print(f"相机内参文件 {camera_params_file} 未找到，请检查路径")
+            save_calibration_points_to_yaml(ws_9points, img_9points, yaml_save_path)
+
+    except FileNotFoundError as e:
+        print(f"路径 {e} 未找到，请检查路径")
     except Exception as e:
         print(f"标定过程出错: {e}")
 

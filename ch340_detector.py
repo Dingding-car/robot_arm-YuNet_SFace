@@ -18,8 +18,8 @@ def detect_ch340_port():
 
         if "CH340" in description.upper() or "1a86:7523" in hwid.lower():
                 print(f"{" " * 14}✓ 发现CH340设备")
+                print(f"{" " * 16}端口号:{port}")
                 return port
         
 if __name__ == "__main__":
-     port = detect_ch340_port()
-     print(f"{port}")
+    detect_ch340_port()
