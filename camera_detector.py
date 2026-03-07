@@ -4,11 +4,11 @@ import platform
 import sys
 
 def detect_camera():
-    print("Searching for camera named 'usb2.0'...")
+    print('搜索USB 2.0相机')
     
     # Detect operating system
     os_name = platform.system().lower()
-    print(f"Platform: {os_name}")
+    print(f"系统: {os_name}")
     
     # Get list of available cameras
     cap = None
@@ -64,7 +64,7 @@ def detect_camera():
                 
                 # Check if this is the camera we're looking for
                 if "usb 2.0" in camera_name.lower() or "usb 2.0" in device_info.lower():
-                    print("\n\u2705 Found target camera 'usb2.0'!")
+                    print("\n\u2705 找到USB 2.0相机")
                     cap.release()
                     return i
                 

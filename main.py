@@ -12,6 +12,7 @@ from model.yunet import YuNet
 from model.sface import SFace
 from model.PIDController import PIDController2D
 from ch340_detector import detect_ch340_port
+from camera_detector import detect_camera
 
 
 
@@ -103,7 +104,7 @@ def capture_video(target_path, servo_queue, camera_id = 0):
     target = cv2.imread(target_path)
     detector.setInputSize([target.shape[1], target.shape[0]])
     target_face = detector.infer(target)
-    assert target_face.shape[0] > 0, 'Cannot find a face in target'
+    assert target_face.shape[0] > 0, '未提供目标人脸'
 
     w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -111,7 +112,7 @@ def capture_video(target_path, servo_queue, camera_id = 0):
 
     tm = cv2.TickMeter()
 
-    print('Press "q" to quit the demo.')
+    print('按下Q退出程序.')
     while cv2.waitKey(1) != ord('q'):
         tm.start()
 
@@ -237,7 +238,8 @@ def main():
     servo_thread.start()
     print("舵机控制线程已启动")
 
-    capture_video(target_path='./images/target3.jpg', servo_queue = servo_queue)
+    camera_id = detect_camera()
+    capture_video(target_path='./images/target3.jpg', servo_queue = servo_queue, camera_id= camera_id)
 
     # 等待舵机线程结束
     servo_thread.join(timeout=1)
