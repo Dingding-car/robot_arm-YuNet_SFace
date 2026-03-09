@@ -2,10 +2,12 @@
 __pycache__/
 
 # 忽略各类Python字节码文件（覆盖不同版本/模式生成的编译文件）
-*.pyc
-*.pyo
-*.pyd
-*$py.class
+
+*.py[ocd]
+build/
+dist/
+wheels/
+*.egg-info
 
 # 忽略各类图片
 images/*
@@ -19,3 +21,6 @@ test*.py
 
 # 忽略临时运行文件
 tempCodeRunnerFile.py
+
+# 忽略环境
+.venv
