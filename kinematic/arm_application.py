@@ -34,7 +34,7 @@ class ArmApplication:
         # with open(yaml_path, 'r', encoding='utf-8') as f:
         #     object_config = yaml.load(f.read(), Loader=yaml.SafeLoader)
         # self.object_height = object_config["height"]
-        self.object_height = 0
+        self.object_height = 5
         # 设置一个默认的工作台Z轴高度
         self.wz_default = self.object_height
 
